@@ -1,27 +1,8 @@
 const Jimp = require('jimp');
-const requireVm = require('require-vm');
+const cv = require('./opencv')
 
-function isReadyFunc () {
-    return new Promise((reslove,reject)=>{
-      const context = {
-        module:{exports:{}},
-        Module:{
-            onRuntimeInitialized() {
-              context.cv = context.module.exports();
-              const cv = context.cv;
-              cv.idft = function(src, dst, flags, nonzero_rows ) {
-                cv.dft( src, dst, flags | cv.DFT_INVERSE, nonzero_rows );
-              }
-              return reslove(context);
-            },
-            onAbort() {
-              return reject(new Error('loading opencv error'))
-            }
-        },
-        print:console.log
-      }
-      requireVm('./opencv.js',context,{},{},true)
-    })
+cv.idft = function(src, dst, flags, nonzero_rows ) {
+    cv.dft( src, dst, flags | cv.DFT_INVERSE, nonzero_rows );
 }
 
 function shiftDFT(cv, mag) {
@@ -155,8 +136,6 @@ function matToBuffer(cv, mat){
 }
 
 async function transformImageWithText(srcFileName,watermarkText,fontSize,enCodeFileName='') {
-  const context = await isReadyFunc ()
-  const cv = context.cv;
   if((typeof srcFileName)!='string' && (!(srcFileName instanceof Buffer))) {
     throw new Error('fileName must be string or Buffer')
   }
@@ -188,8 +167,6 @@ async function transformImageWithText(srcFileName,watermarkText,fontSize,enCodeF
 }
 
 async function getTextFormImage(enCodeFileName,deCodeFileName='') {
-    const context = await isReadyFunc ()
-    const cv = context.cv;
     if((typeof enCodeFileName)!='string'  && (!(enCodeFileName instanceof Buffer))) {
       throw new Error('fileName must be string or Buffer')
     }
